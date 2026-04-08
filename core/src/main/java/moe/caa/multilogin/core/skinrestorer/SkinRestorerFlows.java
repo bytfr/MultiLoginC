@@ -15,7 +15,6 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -61,7 +60,7 @@ public class SkinRestorerFlows implements Callable<SkinRestorerResultImpl> {
                             .addFormDataPart("variant", skinModel)
                             .addFormDataPart("visibility", "0")
                             .addFormDataPart("file", "upload.png",
-                                    RequestBody.create(bytes, MediaType.parse("multipart/form-data"))
+                                    RequestBody.create(bytes, MediaType.parse("image/png"))
                             )
                             .build())
                     .build();
@@ -80,24 +79,29 @@ public class SkinRestorerFlows implements Callable<SkinRestorerResultImpl> {
                     .build();
         }
 
-        Response execute = okHttpClient.newCall(request).execute();
-        JsonObject jo = JsonParser.parseString(Objects.requireNonNull(execute.body()).string()).getAsJsonObject()
+        try (Response execute = okHttpClient.newCall(request).execute()) {
+            ResponseBody responseBody = execute.body();
+            if (responseBody == null) {
+                throw new SkinRestorerException("Response body is null for MineSkin API");
+            }
+            JsonObject jo = JsonParser.parseString(responseBody.string()).getAsJsonObject()
                 .getAsJsonObject("data")
                 .getAsJsonObject("texture");
-        String value = jo.getAsJsonPrimitive("value").getAsString();
-        String signature = jo.getAsJsonPrimitive("signature").getAsString();
-        try {
-            core.getSqlManager().getSkinRestoredCacheTable().insertNew(ValueUtil.sha256(skinUrl), skinModel, value, signature);
-        } catch (Exception e) {
-            LoggerProvider.getLogger().warn("An exception occurred while saving restored skin data.", e);
+            String value = jo.getAsJsonPrimitive("value").getAsString();
+            String signature = jo.getAsJsonPrimitive("signature").getAsString();
+            try {
+                core.getSqlManager().getSkinRestoredCacheTable().insertNew(ValueUtil.sha256(skinUrl), skinModel, value, signature);
+            } catch (Exception e) {
+                LoggerProvider.getLogger().warn("An exception occurred while saving restored skin data.", e);
+            }
+            Property restoredProperty = new Property();
+            restoredProperty.setName("textures");
+            restoredProperty.setValue(value);
+            restoredProperty.setSignature(signature);
+            profile.getPropertyMap().remove("textures");
+            profile.getPropertyMap().put("textures", restoredProperty);
+            return SkinRestorerResultImpl.ofRestorerSucceed(profile);
         }
-        Property restoredProperty = new Property();
-        restoredProperty.setName("textures");
-        restoredProperty.setValue(value);
-        restoredProperty.setSignature(signature);
-        profile.getPropertyMap().remove("textures");
-        profile.getPropertyMap().put("textures", restoredProperty);
-        return SkinRestorerResultImpl.ofRestorerSucceed(profile);
     }
 
     private byte[] requireValidSkin(String skinUrl, String model) throws IOException {
@@ -106,21 +110,23 @@ public class SkinRestorerFlows implements Callable<SkinRestorerResultImpl> {
                 .header("User-Agent", "MultiLogin/v2.0")
                 .url(skinUrl)
                 .build();
-        // 下载皮肤原件
-        byte[] bytes = Objects.requireNonNull(okHttpClient.newCall(request).execute().body()).bytes();
+        byte[] bytes;
+        try (Response response = okHttpClient.newCall(request).execute()) {
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new SkinRestorerException("Response body is null for skin URL: " + skinUrl);
+            }
+            bytes = body.bytes();
+        }
         try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes)) {
             BufferedImage image = ImageIO.read(bais);
 
-            boolean x64 = false; // 1.8 新版皮肤
             if (image.getWidth() != 64) {
                 throw new SkinRestorerException("Skin width is not 64.");
             }
             if (!(image.getHeight() == 32 || image.getHeight() == 64)) {
                 throw new SkinRestorerException("Skin height is not 64 or 32.");
             }
-            x64 = image.getHeight() == 64;
-            // TODO: 2022/7/13 皮肤半透明判断
-
             return bytes;
         }
     }

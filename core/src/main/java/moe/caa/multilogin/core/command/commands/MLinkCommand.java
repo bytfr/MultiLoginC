@@ -150,14 +150,10 @@ public class MLinkCommand {
     }
 
     public static class Entry {
-        // 请求发起时间
         private final long timeMills = System.currentTimeMillis();
-        // 请求发起玩家的在线档案
         private final Pair<GameProfile, Integer> requesterOnlineProfile;
-        // 请求发起玩家请求的档案uuid
         private final UUID receiverUserInGameUUID;
-        // 连接码
-        private String code;
+        private volatile String code;
 
         public Entry(Pair<GameProfile, Integer> requesterOnlineProfile, UUID receiverUserInGameUUID) {
             this.requesterOnlineProfile = requesterOnlineProfile;

@@ -39,12 +39,11 @@ public class MProfileCommand {
                                 .executes(this::executeCreateRandomUUID)))
                 .then(handler.literal("set")
                         .then(handler.argument("profile", ProfileArgumentType.profile())
-                                .requires(iSender -> iSender.hasPermission(Permissions.COMMAND_MULTI_LOGIN_PROFILE_SET_ONESELF))
-                                .executes(this::executeSetOneself))
-                        .then(handler.argument("profile", ProfileArgumentType.profile())
                                 .then(handler.argument("online", OnlineArgumentType.online())
                                         .requires(iSender -> iSender.hasPermission(Permissions.COMMAND_MULTI_LOGIN_PROFILE_SET_OTHER))
-                                        .executes(this::executeSetOther)))
+                                        .executes(this::executeSetOther))
+                                .requires(iSender -> iSender.hasPermission(Permissions.COMMAND_MULTI_LOGIN_PROFILE_SET_ONESELF))
+                                .executes(this::executeSetOneself))
                 )
                 .then(handler.literal("remove")
                         .then(handler.argument("profile", ProfileArgumentType.profile())
@@ -179,8 +178,8 @@ public class MProfileCommand {
         core.getSqlManager().getInGameProfileTable().insertNewData(uuid, name);
         context.getSource().sendMessagePL(
                 core.getLanguageHandler().getMessage("command_message_profile_create",
-                        new Pair<>("uuid", name),
-                        new Pair<>("name", uuid)
+                        new Pair<>("name", name),
+                        new Pair<>("uuid", uuid)
                 )
         );
     }

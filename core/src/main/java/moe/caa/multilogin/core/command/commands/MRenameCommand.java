@@ -24,12 +24,11 @@ public class MRenameCommand {
     public LiteralArgumentBuilder<ISender> register(LiteralArgumentBuilder<ISender> literalArgumentBuilder) {
         return literalArgumentBuilder
                 .then(handler.argument("newname", StringArgumentType.string())
-                        .requires(iSender -> iSender.hasPermission(Permissions.COMMAND_MULTILOGIN_RENAME_ONESELF))
-                        .executes(this::executeRename))
-                .then(handler.argument("newname", StringArgumentType.string())
                         .then(handler.argument("profile", ProfileArgumentType.profile())
                                 .requires(iSender -> iSender.hasPermission(Permissions.COMMAND_MULTILOGIN_RENAME_OTHER))
-                                .executes(this::executeRenameOther)));
+                                .executes(this::executeRenameOther))
+                        .requires(iSender -> iSender.hasPermission(Permissions.COMMAND_MULTILOGIN_RENAME_ONESELF))
+                        .executes(this::executeRename));
     }
 
     @SneakyThrows

@@ -25,18 +25,22 @@ public class SemVersion {
     public static SemVersion of(String version) {
         if (ValueUtil.isEmpty(version)) return null;
         if (version.toLowerCase(Locale.ROOT).startsWith("build_")) return null;
-        // 1.0.0-RC.4
         String[] split = version.split("-");
         String[] mmp = split[0].split("\\.");
-        if (split.length == 1) {
-            return new SemVersion(Integer.parseInt(mmp[0]), Integer.parseInt(mmp[1]), Integer.parseInt(mmp[2]),
-                    VersionSuffix.NONE, -1);
-        }
+        if (mmp.length < 3) return null;
+        try {
+            if (split.length == 1) {
+                return new SemVersion(Integer.parseInt(mmp[0]), Integer.parseInt(mmp[1]), Integer.parseInt(mmp[2]),
+                        VersionSuffix.NONE, -1);
+            }
 
-        if (split.length == 2) {
-            split = split[1].split("\\.");
-            return new SemVersion(Integer.parseInt(mmp[0]), Integer.parseInt(mmp[1]), Integer.parseInt(mmp[2]),
-                    VersionSuffix.valueOf(split[0]), Integer.parseInt(split[1]));
+            if (split.length == 2) {
+                String[] suffixParts = split[1].split("\\.");
+                return new SemVersion(Integer.parseInt(mmp[0]), Integer.parseInt(mmp[1]), Integer.parseInt(mmp[2]),
+                        VersionSuffix.valueOf(suffixParts[0]), suffixParts.length > 1 ? Integer.parseInt(suffixParts[1]) : 0);
+            }
+        } catch (IllegalArgumentException e) {
+            return null;
         }
         return null;
     }
@@ -68,7 +72,9 @@ public class SemVersion {
     }
 
     public boolean needUpgradeIgnoreSuffixes(SemVersion version) {
-        return version.major >= major && version.minor >= minor && version.patch > patch;
+        return (version.major > major) ||
+                (version.major == major && version.minor > minor) ||
+                (version.major == major && version.minor == minor && version.patch > patch);
     }
 
     enum VersionSuffix {

@@ -31,9 +31,14 @@ import moe.caa.multilogin.core.skinrestorer.SkinRestorerCore;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import moe.caa.multilogin.core.ohc.LoggingInterceptor;
+import moe.caa.multilogin.core.ohc.RetryInterceptor;
+import okhttp3.OkHttpClient;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -71,6 +76,13 @@ public class MultiCore implements MultiCoreAPI, MultiLoginAPI {
     private boolean floodgateSupported = false;
     @Getter
     private final String httpRequestHeaderUserAgent = "MultiLogin/v2.0";
+    @Getter
+    private final OkHttpClient sharedHttpClient = new OkHttpClient.Builder()
+            .addInterceptor(new LoggingInterceptor())
+            .connectTimeout(Duration.ofSeconds(10))
+            .readTimeout(Duration.ofSeconds(10))
+            .writeTimeout(Duration.ofSeconds(10))
+            .build();
 
     /**
      * 构建猫踢核心，这个方法将会被反射调用

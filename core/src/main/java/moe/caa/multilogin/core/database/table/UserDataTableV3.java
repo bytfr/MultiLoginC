@@ -369,7 +369,7 @@ public class UserDataTableV3 {
      */
     public void setWhitelist(UUID inGameUUID, boolean whitelist) throws SQLException {
         String sql = String.format(
-                "UPDATE %s SET %s = ? WHERE %s = ?LIMIT 1"
+                "UPDATE %s SET %s = ? WHERE %s = ? LIMIT 1"
                 , tableName, fieldWhitelist, fieldInGameProfileUuid
         );
         try (Connection connection = sqlManager.getPool().getConnection();

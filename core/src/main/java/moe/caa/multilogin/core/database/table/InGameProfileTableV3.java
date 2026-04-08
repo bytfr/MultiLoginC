@@ -206,15 +206,27 @@ public class InGameProfileTableV3 {
                 "INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?)"
                 , tableName, fieldInGameUuid, fieldCurrentUsernameLowerCase, fieldCurrentUsernameOriginal
         );
-        try (Connection connection = sqlManager.getPool().getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)
-        ) {
-            connection.setAutoCommit(false);
-            statement.setBytes(1, ValueUtil.uuidToBytes(inGameUUID));
-            statement.setString(2, currentUsername.toLowerCase());
-            statement.setString(3, currentUsername);
-            statement.executeUpdate();
-            connection.commit();
+        try (Connection connection = sqlManager.getPool().getConnection()) {
+            boolean originalAutoCommit = connection.getAutoCommit();
+            try {
+                connection.setAutoCommit(false);
+                try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                    statement.setBytes(1, ValueUtil.uuidToBytes(inGameUUID));
+                    statement.setString(2, currentUsername.toLowerCase());
+                    statement.setString(3, currentUsername);
+                    statement.executeUpdate();
+                }
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException rollbackEx) {
+                    e.addSuppressed(rollbackEx);
+                }
+                throw e;
+            } finally {
+                connection.setAutoCommit(originalAutoCommit);
+            }
         }
     }
 

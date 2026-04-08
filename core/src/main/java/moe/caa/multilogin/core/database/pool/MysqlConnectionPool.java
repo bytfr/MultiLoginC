@@ -10,7 +10,7 @@ import java.sql.SQLException;
  * MySQL 链接池
  */
 public class MysqlConnectionPool implements ISQLConnectionPool {
-    public static final String defaultUrl = "jdbc:mysql://{0}:{1}/{2}?autoReconnect=true&useUnicode=true&amp&characterEncoding=UTF-8&useSSL=false";
+    public static final String defaultUrl = "jdbc:mysql://{0}:{1}/{2}?autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&useSSL=false";
     private final HikariDataSource dataSource;
 
     public MysqlConnectionPool(String ip, int port, String database, String username, String password, String url) throws ClassNotFoundException {

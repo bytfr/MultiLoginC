@@ -24,7 +24,9 @@ public class GameProfileSerializer implements JsonSerializer<GameProfile>, JsonD
         ret.setPropertyMap(propertyMap);
         if (json.isJsonObject()) {
             JsonObject root = json.getAsJsonObject();
-            ret.setId(ValueUtil.getUuidOrNull(root.get("id").getAsString()));
+            if (root.has("id")) {
+                ret.setId(ValueUtil.getUuidOrNull(root.get("id").getAsString()));
+            }
             if (root.has("name"))
                 ret.setName(root.get("name").getAsString());
             JsonElement propertiesJsonElement = root.get("properties");

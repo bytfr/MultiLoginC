@@ -63,7 +63,7 @@ public abstract class BaseYggdrasilServiceConfig extends BaseServiceConfig {
             return "";
         }
         return ValueUtil.transPapi(trackIpContent,
-                new Pair<>("ip", ip));
+                new Pair<>("ip", URLEncoder.encode(ip, StandardCharsets.UTF_8)));
     }
 
     /**

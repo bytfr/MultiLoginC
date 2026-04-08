@@ -3,30 +3,23 @@ package moe.caa.multilogin.core.auth.service.floodgate;
 import moe.caa.multilogin.api.internal.auth.AuthResult;
 import moe.caa.multilogin.api.profile.GameProfile;
 import moe.caa.multilogin.api.internal.util.ValueUtil;
+import moe.caa.multilogin.api.internal.logger.LoggerProvider;
 import moe.caa.multilogin.core.auth.LoginAuthResult;
 import moe.caa.multilogin.core.auth.service.yggdrasil.UnmodifiableGameProfile;
 import moe.caa.multilogin.core.configuration.service.FloodgateServiceConfig;
 import moe.caa.multilogin.core.main.MultiCore;
 import org.geysermc.event.PostOrder;
 import org.geysermc.event.subscribe.Subscribe;
-import org.geysermc.event.subscribe.Subscriber;
-import org.geysermc.event.subscribe.impl.SubscriberImpl;
-import org.geysermc.floodgate.api.FloodgateApi;
-import org.geysermc.event.PostOrder;
-import org.geysermc.event.subscribe.Subscriber;
 import org.geysermc.event.subscribe.impl.SubscriberImpl;
 import org.geysermc.floodgate.api.FloodgateApi;
 import org.geysermc.floodgate.api.InstanceHolder;
 import org.geysermc.floodgate.api.event.FloodgateEventBus;
-import org.geysermc.floodgate.api.event.skin.SkinApplyEvent;
 import org.geysermc.floodgate.api.event.skin.SkinApplyEvent;
 import org.geysermc.floodgate.api.handshake.HandshakeData;
 import org.geysermc.floodgate.api.handshake.HandshakeHandler;
 import org.geysermc.floodgate.util.BedrockData;
 import org.geysermc.floodgate.util.LinkedPlayer;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
@@ -65,9 +58,26 @@ public class FloodgateAuthenticationService implements HandshakeHandler {
             return;
         }
         BedrockData data = handshakeData.getBedrockData();
+        if (data == null) {
+            LoggerProvider.getLogger().error("BedrockData is null in handshake data.");
+            handshakeData.setDisconnectReason(multiCore.getLanguageHandler().getMessage("auth_floodgate_service_notfound"));
+            return;
+        }
         String xuid = data.getXuid();
-        UUID uuid = ValueUtil.xuidToUUID(xuid);
-        GameProfile profile = new UnmodifiableGameProfile(uuid, initBedrockUsername(handshakeData.getBedrockData().getUsername()), new HashMap<>());
+        if (xuid == null || xuid.isEmpty()) {
+            LoggerProvider.getLogger().error("Floodgate xuid is null or empty.");
+            handshakeData.setDisconnectReason(multiCore.getLanguageHandler().getMessage("auth_floodgate_service_notfound"));
+            return;
+        }
+        UUID uuid;
+        try {
+            uuid = ValueUtil.xuidToUUID(xuid);
+        } catch (NumberFormatException e) {
+            LoggerProvider.getLogger().error("Invalid Floodgate xuid: " + xuid, e);
+            handshakeData.setDisconnectReason(multiCore.getLanguageHandler().getMessage("auth_floodgate_service_notfound"));
+            return;
+        }
+        GameProfile profile = new UnmodifiableGameProfile(uuid, initBedrockUsername(data.getUsername()), new HashMap<>());
         FloodgateServiceConfig service = multiCore.getPluginConfig().getFloodgateAuthenticationService();
         if (service == null) {
             handshakeData.setDisconnectReason(multiCore.getLanguageHandler().getMessage("auth_floodgate_service_notfound"));

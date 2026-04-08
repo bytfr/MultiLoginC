@@ -39,7 +39,11 @@ public class UnmodifiableGameProfile extends GameProfile {
     }
 
     public static UnmodifiableGameProfile unmodifiable(GameProfile profile){
-        return new UnmodifiableGameProfile(profile.getId(), profile.getName(), profile.getPropertyMap());
+        Map<String, Property> copyMap = new HashMap<>();
+        for (Map.Entry<String, Property> entry : profile.getPropertyMap().entrySet()) {
+            copyMap.put(entry.getKey(), entry.getValue().clone());
+        }
+        return new UnmodifiableGameProfile(profile.getId(), profile.getName(), copyMap);
     }
 
     public static class UnmodifiableProperty extends Property {

@@ -18,6 +18,9 @@ public class ValidateContext {
 
 
     protected ValidateContext(BaseServiceAuthenticationResult baseServiceAuthenticationResult) {
+        if (baseServiceAuthenticationResult.getResponse() == null) {
+            throw new IllegalArgumentException("BaseServiceAuthenticationResult response cannot be null");
+        }
         this.baseServiceAuthenticationResult = baseServiceAuthenticationResult;
         this.inGameProfile = baseServiceAuthenticationResult.getResponse().clone();
     }

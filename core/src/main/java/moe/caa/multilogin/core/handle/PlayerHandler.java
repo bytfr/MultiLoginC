@@ -145,6 +145,7 @@ public class PlayerHandler implements HandlerAPI {
             try {
                 Thread.sleep(1000 * 10);
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 LoggerProvider.getLogger().error("An exception occurred on the delayed cache clearing.", e);
             }
 
@@ -152,15 +153,16 @@ public class PlayerHandler implements HandlerAPI {
             for (Map.Entry<UUID, Entry> e : noExists) {
                 Entry entry = cache.get(e.getKey());
 
-                // 数据已被移除
                 if (entry == null) continue;
 
-                // 在移除前数据被更改
                 if (!e.getValue().equals(entry)) continue;
 
-                // 进行移除
                 cache.remove(e.getKey());
             }
+
+            // 清理超时的 loginCache 条目（超过 60 秒未完成登录的）
+            long now = System.currentTimeMillis();
+            loginCache.entrySet().removeIf(e -> (now - e.getValue().signTimeMillis) > 60_000);
 
         }, 0, 1000 * 60);
     }

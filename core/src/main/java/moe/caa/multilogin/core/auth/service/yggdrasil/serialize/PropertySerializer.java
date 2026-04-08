@@ -18,8 +18,8 @@ public class PropertySerializer implements JsonSerializer<Property>, JsonDeseria
         Property ret = new Property();
         if (json.isJsonObject()) {
             JsonObject root = json.getAsJsonObject();
-            ret.setName(root.get("name").getAsString());
-            ret.setValue(root.get("value").getAsString());
+            if (root.has("name")) ret.setName(root.get("name").getAsString());
+            if (root.has("value")) ret.setValue(root.get("value").getAsString());
             if (root.has("signature")) ret.setSignature(root.get("signature").getAsString());
         }
         return UnmodifiableGameProfile.UnmodifiableProperty.unmodifiable(ret);

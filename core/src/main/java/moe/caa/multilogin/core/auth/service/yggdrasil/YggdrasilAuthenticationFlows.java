@@ -4,7 +4,6 @@ import moe.caa.multilogin.api.profile.GameProfile;
 import moe.caa.multilogin.api.internal.util.Pair;
 import moe.caa.multilogin.core.configuration.service.yggdrasil.BaseYggdrasilServiceConfig;
 import moe.caa.multilogin.core.main.MultiCore;
-import moe.caa.multilogin.core.ohc.LoggingInterceptor;
 import moe.caa.multilogin.core.ohc.RetryInterceptor;
 import moe.caa.multilogin.flows.workflows.BaseFlows;
 import moe.caa.multilogin.flows.workflows.Signal;
@@ -13,7 +12,6 @@ import okhttp3.*;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Objects;
 
 /**
  * 一个工作流，进行对 Yggd 的 hasJoined 访问
@@ -58,9 +56,8 @@ public class YggdrasilAuthenticationFlows extends BaseFlows<HasJoinedContext> {
 
 
     private GameProfile call0(BaseYggdrasilServiceConfig config, Request request) throws IOException {
-        OkHttpClient client = new OkHttpClient.Builder()
+        OkHttpClient client = core.getSharedHttpClient().newBuilder()
                 .addInterceptor(new RetryInterceptor(config.getRetry(), config.getRetryDelay()))
-                .addInterceptor(new LoggingInterceptor())
                 .writeTimeout(Duration.ofMillis(config.getTimeout()))
                 .readTimeout(Duration.ofMillis(config.getTimeout()))
                 .connectTimeout(Duration.ofMillis(config.getTimeout()))
@@ -69,7 +66,11 @@ public class YggdrasilAuthenticationFlows extends BaseFlows<HasJoinedContext> {
                 .build();
         Call call = client.newCall(request);
         try (Response execute = call.execute()) {
-            return core.getGson().fromJson(Objects.requireNonNull(execute.body()).string(), GameProfile.class);
+            ResponseBody body = execute.body();
+            if (body == null) {
+                throw new IOException("Response body is null for " + request.url());
+            }
+            return core.getGson().fromJson(body.string(), GameProfile.class);
         }
     }
 
@@ -78,7 +79,7 @@ public class YggdrasilAuthenticationFlows extends BaseFlows<HasJoinedContext> {
         try {
             GameProfile call = call();
             if (call != null && call.getId() != null) {
-                hasJoinedContext.getResponse().set(new Pair<>(call, (config)));
+                hasJoinedContext.getResponse().compareAndSet(null, new Pair<>(call, config));
                 return Signal.PASSED;
             }
             return Signal.TERMINATED;

@@ -57,7 +57,8 @@ public class AuthHandler implements AuthAPI {
             }
         } catch (Exception e) {
             LoggerProvider.getLogger().error("An exception occurred while processing the hasJoined request.", e);
-            return LoginAuthResult.ofDisallowedByYggdrasilAuthenticator(null, core.getLanguageHandler().getMessage("auth_yggdrasil_error"));
+            YggdrasilAuthenticationResult errorResult = new YggdrasilAuthenticationResult(YggdrasilAuthenticationResult.Reason.SERVER_BREAKDOWN, null, null);
+            return LoginAuthResult.ofDisallowedByYggdrasilAuthenticator(errorResult, core.getLanguageHandler().getMessage("auth_yggdrasil_error"));
         }
 
         return checkIn(yggdrasilAuthenticationResult);

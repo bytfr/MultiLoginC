@@ -4,6 +4,7 @@ import lombok.Getter;
 import moe.caa.multilogin.api.internal.logger.LoggerProvider;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.Properties;
 
@@ -24,11 +25,17 @@ public class BuildManifest {
 
     public void read() throws IOException {
         Properties properties = new Properties();
-        properties.load(getClass().getResourceAsStream("/build.properties"));
+        try (InputStream resourceStream = getClass().getResourceAsStream("/build.properties")) {
+            if (resourceStream == null) {
+                throw new IOException("build.properties resource not found");
+            }
+            properties.load(resourceStream);
+        }
 
-        buildType = properties.getProperty("build_type");
-        buildDate = new Date(Long.parseLong(properties.getProperty("build_timestamp")));
-        version = properties.getProperty("version");
+        buildType = properties.getProperty("build_type", "unknown");
+        String timestampStr = properties.getProperty("build_timestamp", "0");
+        buildDate = new Date(Long.parseLong(timestampStr));
+        version = properties.getProperty("version", "unknown");
     }
 
     public void checkStable() {

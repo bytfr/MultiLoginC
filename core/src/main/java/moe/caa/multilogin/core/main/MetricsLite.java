@@ -185,12 +185,9 @@ public class MetricsLite {
         try (DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream())) {
             outputStream.write(compressedData);
         }
-//        这里似乎必须这样
-        Thread.sleep(1000);
-        try (DataInputStream inputStream = new DataInputStream(connection.getInputStream())) {
-            byte[] bytes = new byte[inputStream.available()];
-            inputStream.read(bytes);
-            String s = new String(bytes);
+        try (InputStream inputStream = connection.getInputStream()) {
+            byte[] bytes = inputStream.readAllBytes();
+            String s = new String(bytes, StandardCharsets.UTF_8);
             if (!ValueUtil.isEmpty(s)) {
                 LoggerProvider.getLogger().debug("bStats receive: " + s);
             }

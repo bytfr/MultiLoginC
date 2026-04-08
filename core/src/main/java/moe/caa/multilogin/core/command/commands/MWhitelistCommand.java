@@ -121,7 +121,7 @@ public class MWhitelistCommand {
     // /MultiLogin whitelist remove <name>
     @SneakyThrows
     private int executeRemoveUsername(CommandContext<ISender> context) {
-        String username = StringArgumentType.getString(context, "username");
+        String username = StringArgumentType.getString(context, "username").toLowerCase(Locale.ROOT);
         int count = 0;
         if (CommandHandler.getCore().getCacheWhitelistHandler().getCachedWhitelist().remove(username)) {
             count++;

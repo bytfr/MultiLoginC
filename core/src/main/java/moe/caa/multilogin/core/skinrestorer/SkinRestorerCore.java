@@ -14,7 +14,6 @@ import moe.caa.multilogin.core.auth.LoginAuthResult;
 import moe.caa.multilogin.core.configuration.SkinRestorerConfig;
 import moe.caa.multilogin.core.configuration.service.BaseServiceConfig;
 import moe.caa.multilogin.core.main.MultiCore;
-import moe.caa.multilogin.core.ohc.LoggingInterceptor;
 import moe.caa.multilogin.core.ohc.RetryInterceptor;
 import okhttp3.OkHttpClient;
 
@@ -58,7 +57,7 @@ public class SkinRestorerCore implements SkinRestorerAPI {
     private static boolean isSignatureValid(String value, String signatureValue) throws InvalidKeyException, NoSuchAlgorithmException, SignatureException {
         Signature signature = Signature.getInstance("SHA1withRSA");
         signature.initVerify(publicKey);
-        signature.update(value.getBytes());
+        signature.update(value.getBytes(StandardCharsets.UTF_8));
         return signature.verify(Base64.getDecoder().decode(signatureValue));
     }
 
@@ -95,10 +94,9 @@ public class SkinRestorerCore implements SkinRestorerAPI {
         LoginAuthResult result = ((LoginAuthResult) result0);
         GameProfile profile = result.getResponse().clone();
         BaseServiceConfig serviceConfig = result.getBaseServiceAuthenticationResult().getServiceConfig();
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        OkHttpClient okHttpClient = core.getSharedHttpClient().newBuilder()
                 .addInterceptor(new RetryInterceptor(serviceConfig.getSkinRestorer().getRetry(),
                         serviceConfig.getSkinRestorer().getRetryDelay()))
-                .addInterceptor(new LoggingInterceptor())
                 .writeTimeout(Duration.ofMillis(serviceConfig.getSkinRestorer().getTimeout()))
                 .readTimeout(Duration.ofMillis(serviceConfig.getSkinRestorer().getTimeout()))
                 .connectTimeout(Duration.ofMillis(serviceConfig.getSkinRestorer().getTimeout()))
