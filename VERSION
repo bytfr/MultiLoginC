@@ -1,0 +1,10 @@
+# MultiLogin 版本配置文件
+# 修改此文件即可统一控制项目版本号，无需修改其他地方
+#
+# 正式版版本号（发布时使用）
+# 格式：主版本.次版本.修订号 或 自定义字符串（如 a260408）
+# 当 build.gradle 中 env=final 时生效
+RELEASE_VERSION=2.0.0
+
+# 构建类型: AUTO (自动=Build_{gitCommitId}) / FINAL (使用上面的 RELEASE_VERSION)
+BUILD_ENV=AUTO

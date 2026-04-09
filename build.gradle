@@ -9,6 +9,18 @@ plugins {
 
 apply from: './constant.gradle'
 
+def readVersionConfig() {
+    def vf = file('VERSION')
+    if (!vf.exists()) return ['RELEASE_VERSION': 'unknown', 'BUILD_ENV': 'AUTO']
+    def props = new Properties()
+    vf.withReader { r -> props.load(r) }
+    return [
+            'RELEASE_VERSION': props.getProperty('RELEASE_VERSION', 'unknown'),
+            'BUILD_ENV'      : props.getProperty('BUILD_ENV', 'AUTO').toUpperCase()
+    ]
+}
+ext.versionConfig = readVersionConfig()
+
 allprojects {
     apply plugin: "java"
     def getGitCommitId = { ->
@@ -25,6 +37,8 @@ allprojects {
         }
     }
     ext.gitCommitId = getGitCommitId()
+
+    ext.plugin_version = versionConfig.RELEASE_VERSION
     version = "${gitCommitId}"
 }
 
@@ -71,7 +85,7 @@ subprojects {
         }
 
         def ver;
-        def env = System.getProperty("env", "AUTO").toLowerCase()
+        def env = System.getProperty("env", rootProject.versionConfig.BUILD_ENV).toLowerCase()
         if (env == "final") {
             ver = (project.plugin_version as String)
         } else {
