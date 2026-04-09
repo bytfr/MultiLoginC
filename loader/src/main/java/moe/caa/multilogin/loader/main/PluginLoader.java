@@ -168,9 +168,6 @@ public class PluginLoader {
 
     private void loadNestJar(String nestJarName, IExtURLClassLoader classLoader) throws IOException {
         final File output = File.createTempFile(nestJarName + ".", ".jar", plugin.getTempFolder());
-        if (!output.exists()) {
-            Files.createFile(output.toPath());
-        }
         output.deleteOnExit();
         try (InputStream is = PluginLoader.class.getClassLoader().getResourceAsStream(nestJarName);
              FileOutputStream fos = new FileOutputStream(output);
@@ -222,23 +219,19 @@ public class PluginLoader {
 
     // 获得文件sha256
     private String getSha256(File file) throws Exception {
-        try (FileInputStream fis = new FileInputStream(file);
-             ByteArrayOutputStream baos = new ByteArrayOutputStream();) {
-            byte[] buff = new byte[1024];
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        try (FileInputStream fis = new FileInputStream(file)) {
+            byte[] buff = new byte[8192];
             int n;
             while ((n = fis.read(buff)) > 0) {
-                baos.write(buff, 0, n);
+                digest.update(buff, 0, n);
             }
-            final byte[] digest = MessageDigest.getInstance("SHA-256").digest(baos.toByteArray());
-            StringBuilder sb = new StringBuilder();
-            for (byte aByte : digest) {
-                String temp = Integer.toHexString((aByte & 0xFF));
-                if (temp.length() == 1) {
-                    sb.append("0");
-                }
-                sb.append(temp);
-            }
-            return sb.toString();
         }
+        byte[] hash = digest.digest();
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hash) {
+            sb.append(String.format("%02x", b & 0xFF));
+        }
+        return sb.toString();
     }
 }

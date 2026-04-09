@@ -5,12 +5,8 @@ import moe.caa.multilogin.flows.ProcessingFailedException;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * 代表一个并行的委托流
- * 所有工序并行尝试加工这个零件，直到有一条工序能顺利完成。
- */
 public class EntrustFlows<C> extends BaseFlows<C> {
     @Getter
     private final List<BaseFlows<C>> steps;
@@ -23,13 +19,17 @@ public class EntrustFlows<C> extends BaseFlows<C> {
     public Signal run(C context) {
         if (steps.isEmpty()) return Signal.TERMINATED;
 
-        AtomicReference<Signal> firstPassed = new AtomicReference<>();
+        AtomicBoolean anyPassed = new AtomicBoolean(false);
 
         CompletableFuture<?>[] futures = steps.stream()
                 .map(step -> CompletableFuture.runAsync(() -> {
-                    Signal signal = step.run(context);
-                    if (signal == Signal.PASSED) {
-                        firstPassed.compareAndSet(null, Signal.PASSED);
+                    if (anyPassed.get()) return;
+                    try {
+                        Signal signal = step.run(context);
+                        if (signal == Signal.PASSED) {
+                            anyPassed.set(true);
+                        }
+                    } catch (Exception ignored) {
                     }
                 }, BaseFlows.getExecutorService()))
                 .toArray(CompletableFuture[]::new);
@@ -40,6 +40,6 @@ public class EntrustFlows<C> extends BaseFlows<C> {
             throw new ProcessingFailedException(e.getCause());
         }
 
-        return firstPassed.get() != null ? Signal.PASSED : Signal.TERMINATED;
+        return anyPassed.get() ? Signal.PASSED : Signal.TERMINATED;
     }
 }

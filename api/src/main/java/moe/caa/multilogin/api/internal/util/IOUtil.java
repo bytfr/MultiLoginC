@@ -21,7 +21,7 @@ public class IOUtil {
      * 拷贝流
      */
     public static void copy(InputStream is, OutputStream os) throws IOException {
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[8192];
         int n;
         while ((n = is.read(buffer)) != -1) {
             os.write(buffer, 0, n);

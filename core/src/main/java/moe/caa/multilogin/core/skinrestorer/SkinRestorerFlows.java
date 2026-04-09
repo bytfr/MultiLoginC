@@ -120,7 +120,9 @@ public class SkinRestorerFlows implements Callable<SkinRestorerResultImpl> {
         }
         try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes)) {
             BufferedImage image = ImageIO.read(bais);
-
+            if (image == null) {
+                throw new SkinRestorerException("Unable to read skin image, unsupported format.");
+            }
             if (image.getWidth() != 64) {
                 throw new SkinRestorerException("Skin width is not 64.");
             }

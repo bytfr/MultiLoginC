@@ -14,10 +14,7 @@ public class OfficialYggdrasilServiceConfig extends BaseYggdrasilServiceConfig {
 
     public OfficialYggdrasilServiceConfig(int id, String name, InitUUID initUUID, String initNameFormat, boolean whitelist, SkinRestorerConfig skinRestorer, boolean trackIp, int timeout, int retry, long retryDelay, ProxyConfig authProxy, String customSessionServer) throws ConfException {
         super(id, name, initUUID, initNameFormat, whitelist, skinRestorer, trackIp, timeout, retry, retryDelay, authProxy);
-        if (!customSessionServer.endsWith("/")) {
-            customSessionServer = customSessionServer.concat("/");
-        }
-        this.customSessionServer = customSessionServer;
+        this.customSessionServer = customSessionServer.endsWith("/") ? customSessionServer : customSessionServer + "/";
     }
 
 

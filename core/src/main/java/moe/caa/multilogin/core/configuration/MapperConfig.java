@@ -20,12 +20,12 @@ public class MapperConfig implements MapperConfigAPI {
     private final TreeMap<Integer,Integer> packetMapping = new TreeMap<>() {
         @Override
         public Integer put(Integer key, Integer value) {
-            if(key<761) return value;
+            if(key < 761) return null;
             if(this.containsValue(value)) {
                 Integer existingKey = findKeyByValue(value);
                 if (existingKey != null && existingKey > key) {
                     super.remove(existingKey);
-                    super.put(key, value);
+                    return super.put(key, value);
                 }
                 return value;
             }

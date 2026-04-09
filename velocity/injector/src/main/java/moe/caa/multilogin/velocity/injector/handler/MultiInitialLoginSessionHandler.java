@@ -67,7 +67,7 @@ public class MultiInitialLoginSessionHandler {
     private ServerLoginPacket login;
     private byte[] verify;
     // 自己的对象，表示是否通过加密
-    private boolean encrypted = false;
+    private volatile boolean encrypted = false;
 
     public MultiInitialLoginSessionHandler(InitialLoginSessionHandler initialLoginSessionHandler, MultiCoreAPI multiCoreAPI) {
         this.initialLoginSessionHandler = initialLoginSessionHandler;

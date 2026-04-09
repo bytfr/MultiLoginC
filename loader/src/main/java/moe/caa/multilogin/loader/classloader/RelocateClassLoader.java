@@ -36,21 +36,28 @@ public class RelocateClassLoader extends URLClassLoader implements IExtURLClassL
                 final String vanillaName = name.substring(appendPrefix.length());
                 String path = vanillaName.replace('.', '/').concat(".class");
                 final InputStream inputStream = getResourceAsStream(path);
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                int code;
-                while ((code = inputStream.read()) != -1) {
-                    baos.write(code);
+                if (inputStream == null) {
+                    return super.findClass(name);
                 }
-                byte[] bytes = baos.toByteArray();
+                try (inputStream) {
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    int code;
+                    while ((code = inputStream.read()) != -1) {
+                        baos.write(code);
+                    }
+                    byte[] bytes = baos.toByteArray();
 
-                ClassReader cr = new ClassReader(bytes);
-                ClassWriter cw = new ClassWriter(0);
+                    ClassReader cr = new ClassReader(bytes);
+                    ClassWriter cw = new ClassWriter(0);
 
-                cr.accept(new ClassRemapper(cw, new AppendPrefixMapper()), ClassReader.EXPAND_FRAMES);
+                    cr.accept(new ClassRemapper(cw, new AppendPrefixMapper()), ClassReader.EXPAND_FRAMES);
 
-                bytes = cw.toByteArray();
+                    bytes = cw.toByteArray();
 
-                return defineClass(name, bytes, 0, bytes.length);
+                    return defineClass(name, bytes, 0, bytes.length);
+                }
+            } catch (ClassNotFoundException e) {
+                throw e;
             } catch (Exception ignored) {
             }
         }

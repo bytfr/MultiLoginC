@@ -75,8 +75,9 @@ public class SkinRestoredCacheTableV2 {
      */
     public void insertNew(byte[] urlSha256, String model, String value, String signature) throws SQLException {
         String sql = String.format(
-                "INSERT INTO %s (%s, %s, %s, %s) VALUES (?, ?, ?, ?) "
+                "MERGE INTO %s (%s, %s, %s, %s) KEY(%s, %s) VALUES (?, ?, ?, ?) "
                 , tableName, fieldCurrentSkinUrlSha256, fieldCurrentSkinModel, fieldRestorerValue, fieldRestorerSignature
+                , fieldCurrentSkinUrlSha256, fieldCurrentSkinModel
         );
         try (Connection connection = sqlManager.getPool().getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)

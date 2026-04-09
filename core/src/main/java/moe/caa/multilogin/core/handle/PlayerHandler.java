@@ -28,17 +28,17 @@ public class PlayerHandler implements HandlerAPI {
 
     private final MultiCore core;
 
-    // inGameUUID \ Entry
     private final Map<UUID, Entry> cache;
 
-    // inGameUUID \ Entry
-    // 表示登录缓存
+    private final Map<UUID, Entry> onlineUUIDIndex;
+
     @Getter
     private final Map<UUID, Entry> loginCache;
 
     public PlayerHandler(MultiCore core) {
         this.core = core;
         this.cache = new ConcurrentHashMap<>();
+        this.onlineUUIDIndex = new ConcurrentHashMap<>();
         this.loginCache = new ConcurrentHashMap<>();
     }
 
@@ -67,6 +67,7 @@ public class PlayerHandler implements HandlerAPI {
                 ));
             }
             cache.put(inGameUUID, remove);
+            onlineUUIDIndex.put(remove.onlineProfile.getId(), remove);
         }
 
         return new HandleResult(HandleResult.Type.NONE, null);
@@ -118,10 +119,11 @@ public class PlayerHandler implements HandlerAPI {
 
     @Override
     public UUID getInGameUUID(UUID onlineUUID, int serviceId) {
-        for (Map.Entry<UUID, Entry> entry : cache.entrySet()) {
-            if (entry.getValue().onlineProfile.getId().equals(onlineUUID)
-                    && entry.getValue().serviceConfig.getId() == serviceId)
-                return entry.getKey();
+        Entry entry = onlineUUIDIndex.get(onlineUUID);
+        if (entry == null) return null;
+        if (entry.serviceConfig.getId() != serviceId) return null;
+        for (Map.Entry<UUID, Entry> e : cache.entrySet()) {
+            if (e.getValue() == entry) return e.getKey();
         }
         return null;
     }
@@ -158,6 +160,7 @@ public class PlayerHandler implements HandlerAPI {
                 if (!e.getValue().equals(entry)) continue;
 
                 cache.remove(e.getKey());
+                onlineUUIDIndex.remove(entry.onlineProfile.getId());
             }
 
             // 清理超时的 loginCache 条目（超过 60 秒未完成登录的）

@@ -6,6 +6,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
+import moe.caa.multilogin.api.internal.logger.LoggerProvider;
 import org.jetbrains.annotations.NotNull;
 
 public class ChatSessionHandler extends ChannelDuplexHandler {
@@ -29,7 +30,9 @@ public class ChatSessionHandler extends ChannelDuplexHandler {
                 ProtocolUtils.readUuid(c);
                 ProtocolUtils.readPlayerKey(player.getProtocolVersion(), c);
                 eventManager.fire(new NewChatSessionPacketIDEvent(packetId,player.getProtocolVersion(),player));
-            } catch (Throwable ignore) { } finally {
+            } catch (Exception e) {
+                LoggerProvider.getLogger().debug("Failed to process chat session packet for player " + player.getUsername(), e);
+            } finally {
                 c.resetReaderIndex();
             }
         }
