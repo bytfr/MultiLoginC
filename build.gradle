@@ -11,12 +11,13 @@ apply from: './constant.gradle'
 
 def readVersionConfig() {
     def vf = file('VERSION')
-    if (!vf.exists()) return ['RELEASE_VERSION': 'unknown', 'BUILD_ENV': 'AUTO']
+    if (!vf.exists()) return ['RELEASE_VERSION': 'unknown', 'BUILD_ENV': 'AUTO', 'LATEST_VERSIONS': 'unknown']
     def props = new Properties()
     vf.withReader { r -> props.load(r) }
     return [
             'RELEASE_VERSION': props.getProperty('RELEASE_VERSION', 'unknown'),
-            'BUILD_ENV'      : props.getProperty('BUILD_ENV', 'AUTO').toUpperCase()
+            'BUILD_ENV'      : props.getProperty('BUILD_ENV', 'AUTO').toUpperCase(),
+            'LATEST_VERSIONS' : props.getProperty('LATEST_VERSIONS', '')
     ]
 }
 ext.versionConfig = readVersionConfig()
@@ -121,6 +122,14 @@ subprojects {
 
     compileJava {
         sourceCompatibility = targetCompatibility = JavaVersion.VERSION_21
+    }
+}
+
+task syncLatestFile {
+    def latestFile = file('latest')
+    def latestVersions = versionConfig.LATEST_VERSIONS
+    if (latestVersions != null && !latestVersions.isEmpty()) {
+        latestFile.text = latestVersions
     }
 }
 

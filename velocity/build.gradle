@@ -97,3 +97,5 @@ tasks.register('getLatestVelocity', Copy) {
 artifacts {
     archives shadowJar
 }
+
+shadowJar.dependsOn ':syncLatestFile'
