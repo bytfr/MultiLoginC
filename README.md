@@ -9,6 +9,12 @@ _社区维护版 (Community Edition)_
 
 [!\[GitHub license\](https://img.shields.io/github/license/bytfr/MultiLoginC?style=flat-square null)](https://github.com/bytfr/MultiLoginC/blob/master/LICENSE)
 
+> [!CAUTION]
+> 🚧 因HyperZoneLogin插件已经推出，故本版本MultiLogin不再继续维护
+> 你可以快速迁移到该插件。
+> GitHub: https://github.com/HyperZoneLogin/HyperzoneLogin/
+> 文档：https://docs.h2l.icu/
+
 </div>
 
 ## 概述
